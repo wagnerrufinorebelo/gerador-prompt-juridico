@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Prompt Jurídico - Método IDEAL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .form-section {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group .hint {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: normal;
+            display: block;
+            margin-top: 3px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .btn-generate {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-generate:active {
+            transform: translateY(0);
+        }
+        
+        .result-section {
+            background: #f8f9fa;
+            padding: 40px;
+            display: none;
+        }
+        
+        .result-section.show {
+            display: block;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-header h2 {
+            color: #2c3e50;
+            font-size: 22px;
+        }
+        
+        .btn-copy {
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-copy:hover {
+            background: #229954;
+            transform: scale(1.05);
+        }
+        
+        .prompt-output {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .copy-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .copy-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .form-section, .btn-generate, .btn-copy {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="copy-notification" id="copyNotification">
+        ✓ Prompt copiado com sucesso!
+    </div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Gerador de Prompt Jurídico</h1>
+            <p>Método IDEAL - Busca de Jurisprudência Previdenciária</p>
+        </div>
+        
+        <div class="form-section">
+            <form id="promptForm">
+                <div class="form-group">
+                    <label>
+                        I/A - Tema Principal
+                        <span class="hint">Qual o benefício/tema jurídico central? (Ex: Aposentadoria por Invalidez)</span>
+                    </label>
+                    <input type="text" id="temaPrincipal" placeholder="Ex: Aposentadoria por Invalidez" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        E - Assunto Específico
+                        <span class="hint">Qual a patologia, causa ou aspecto fático? (Ex: Hérnia de Disco)</span>
+                    </label>
+                    <input type="text" id="assuntoEspecifico" placeholder="Ex: Hérnia de Disco, Diabetes" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        I/A - Foco da Análise
+                        <span class="hint">O aspecto legal crucial (Ex: Grau de Incapacidade)</span>
+                    </label>
+                    <input type="text" id="focoAnalise" placeholder="Ex: Grau de Incapacidade, Qualidade de Segurado" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        D - Formato/Estrutura
+                        <span class="hint">A estrutura de saída desejada</span>
+                    </label>
+                    <select id="estrutura" required>
+                        <option value="Tabela Comparativa">Tabela Comparativa (5 colunas)</option>
+                        <option value="Lista de Tópicos">Lista de Tópicos</option>
+                        <option value="Análise Narrativa">Análise Narrativa</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        L - Exclusões
+                        <span class="hint">O que deve ser ignorado? (Ex: Auxílio-Doença, Pensão por Morte)</span>
+                    </label>
+                    <textarea id="exclusoes" placeholder="Ex: Auxílio-Doença, Pensão por Morte, outras patologias não relacionadas"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        L - Quantidade de Julgados
+                        <span class="hint">Total de acórdãos desejados (será dividido entre JFSC e TRF4)</span>
+                    </label>
+                    <input type="number" id="quantidade" value="8" min="2" max="50" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        A - Tonalidade
+                        <span class="hint">Estilo da resposta</span>
+                    </label>
+                    <select id="tonalidade" required>
+                        <option value="Técnico e Detalhado">Técnico e Detalhado</option>
+                        <option value="Objetivo e Resumido">Objetivo e Resumido</option>
+                        <option value="Crítico e Analítico">Crítico e Analítico</option>
+                        <option value="Didático e Explicativo">Didático e Explicativo</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn-generate">
+                    🚀 Gerar Prompt Calibrado
+                </button>
+            </form>
+        </div>
+        
+        <div class="result-section" id="resultSection">
+            <div class="result-header">
+                <h2>📋 Prompt Gerado</h2>
+                <button class="btn-copy" id="copyBtn">📄 Copiar Prompt</button>
+            </div>
+            <div class="prompt-output" id="promptOutput"></div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('promptForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const temaPrincipal = document.getElementById('temaPrincipal').value;
+            const assuntoEspecifico = document.getElementById('assuntoEspecifico').value;
+            const focoAnalise = document.getElementById('focoAnalise').value;
+            const estrutura = document.getElementById('estrutura').value;
+            const exclusoes = document.getElementById('exclusoes').value;
+            const quantidade = document.getElementById('quantidade').value;
+            const tonalidade = document.getElementById('tonalidade').value;
+            
+            const metadeQuantidade = Math.floor(quantidade / 2);
+            
+            const prompt = `I/A (Intenção/Papel & Ação): Você é um Assistente Jurídico sênior, especialista em Direito Previdenciário focado na análise do ${focoAnalise}. A tonalidade da resposta deve ser ${tonalidade}. Realize a busca nos sistemas de jurisprudência do JFSC (Justiça Federal de Santa Catarina) e do TRF4 (Tribunal Regional Federal da 4ª Região).
+
+E (Entrada/Referências): A pesquisa deve focar exclusivamente em casos de ${temaPrincipal} onde ${assuntoEspecifico} foi o fator principal de análise. Destaque nas ementas os pontos que tratam da qualidade da prova pericial ou da impossibilidade de reabilitação.
+
+D (Detalhes/Formato): Quero uma ${estrutura} com cinco colunas: Tribunal, Número do Processo/Acórdão, Tipo de Incapacidade (Total/Parcial, Permanente/Temporária), Ementa (resumo com foco no ${focoAnalise}) e Resultado (Concedido/Negado).
+
+L (Limites/Exclusão): Limite a pesquisa aos ${quantidade} julgados mais recentes (${metadeQuantidade} do JFSC e ${metadeQuantidade} do TRF4). ${exclusoes ? `Exclua qualquer jurisprudência sobre ${exclusoes}, mantendo o foco estrito no benefício ${temaPrincipal}.` : `Mantenha o foco estrito no benefício ${temaPrincipal}.`}`;
+            
+            document.getElementById('promptOutput').textContent = prompt;
+            document.getElementById('resultSection').classList.add('show');
+            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const promptText = document.getElementById('promptOutput').textContent;
+            navigator.clipboard.writeText(promptText).then(function() {
+                const notification = document.getElementById('copyNotification');
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
